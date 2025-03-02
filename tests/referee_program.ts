@@ -1,5 +1,5 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
@@ -1452,7 +1452,7 @@ describe("referee_program", () => {
 
       const admin_ata = getAssociatedTokenAddressSync(
         created_mint_a_account.address,
-        game_a.publicKey,
+        admin.publicKey,
         true,
         TOKEN_PROGRAM_ID
       );
@@ -1483,19 +1483,11 @@ describe("referee_program", () => {
         await connection.getTokenAccountBalance(game_ata)
       ).value.amount;
 
-      assert.strictEqual(game_ata_balance_after_tx, game_ata_balance_before_tx);
-
       const admin_ata_balance_after_tx = (
         await connection.getTokenAccountBalance(admin_ata)
       ).value.amount;
 
-      console.log({
-        before: admin_ata_balance_before_tx,
-        after: admin_ata_balance_after_tx,
-      });
-
-      //wait 30 seconds
-      await new Promise((resolve) => setTimeout(resolve, 30000));
+      assert.strictEqual(game_ata_balance_after_tx, game_ata_balance_before_tx);
 
       assert.strictEqual(
         admin_ata_balance_after_tx,
@@ -1505,205 +1497,208 @@ describe("referee_program", () => {
         ).toString()
       );
     });
-    // it("create game session", async () => {
-    //   let team_a = [player_a.publicKey, player_c.publicKey];
-    //   let team_b = [player_b.publicKey, player_d.publicKey];
+    it("create game session", async () => {
+      let team_a = [player_a.publicKey, player_c.publicKey];
+      let team_b = [player_b.publicKey, player_d.publicKey];
 
-    //   const SESSION_ENTRY_COST_PER_TEAM = new BN(250);
+      const SESSION_ENTRY_COST_PER_TEAM = new BN(100);
 
-    //   await program.methods
-    //     .initializeSession(SEED_2, SESSION_ENTRY_COST_PER_TEAM, [
-    //       team_a,
-    //       team_b,
-    //     ])
-    //     .accountsPartial({
-    //       game: game_a.publicKey,
-    //       mint: created_mint_a_account.address,
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //     })
-    //     .signers([game_a])
-    //     .rpc();
+      expect(
+        await program.methods
+          .updateProgramConfig(new BN(200))
+          .accounts({
+            authority: admin.publicKey,
+            game: game_a.publicKey,
+          })
+          .signers([admin])
+          .rpc()
+      ).to.not.throw;
 
-    //   await program.methods
-    //     .deposit()
-    //     .accountsPartial({
-    //       player: player_a.publicKey,
-    //       game: game_a.publicKey,
-    //       mint: created_mint_a_account.address,
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //       gameSession: game_a_game_session_33334444_address,
-    //     })
-    //     .signers([player_a])
-    //     .rpc();
+      await program.methods
+        .initializeSession(SEED_2, SESSION_ENTRY_COST_PER_TEAM, [
+          team_a,
+          team_b,
+        ])
+        .accountsPartial({
+          game: game_a.publicKey,
+          mint: created_mint_a_account.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([game_a])
+        .rpc();
 
-    //   await program.methods
-    //     .deposit()
-    //     .accountsPartial({
-    //       player: player_b.publicKey,
-    //       game: game_a.publicKey,
-    //       mint: created_mint_a_account.address,
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //       gameSession: game_a_game_session_33334444_address,
-    //     })
-    //     .signers([player_b])
-    //     .rpc();
+      await program.methods
+        .deposit()
+        .accountsPartial({
+          player: player_a.publicKey,
+          game: game_a.publicKey,
+          mint: created_mint_a_account.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          gameSession: game_a_game_session_33334444_address,
+        })
+        .signers([player_a])
+        .rpc();
 
-    //   await program.methods
-    //     .deposit()
-    //     .accountsPartial({
-    //       player: player_c.publicKey,
-    //       game: game_a.publicKey,
-    //       mint: created_mint_a_account.address,
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //       gameSession: game_a_game_session_33334444_address,
-    //     })
-    //     .signers([player_c])
-    //     .rpc();
+      await program.methods
+        .deposit()
+        .accountsPartial({
+          player: player_b.publicKey,
+          game: game_a.publicKey,
+          mint: created_mint_a_account.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          gameSession: game_a_game_session_33334444_address,
+        })
+        .signers([player_b])
+        .rpc();
 
-    //   await program.methods
-    //     .deposit()
-    //     .accountsPartial({
-    //       player: player_d.publicKey,
-    //       game: game_a.publicKey,
-    //       mint: created_mint_a_account.address,
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //       gameSession: game_a_game_session_33334444_address,
-    //     })
-    //     .signers([player_d])
-    //     .rpc();
-    // });
-    // it("should throw if not all eligible players recieved winnings", async () => {
-    //   await program.methods
-    //     .payout()
-    //     .accountsPartial({
-    //       player: player_a.publicKey,
-    //       game: game_a.publicKey,
-    //       mint: created_mint_a_account.address,
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //       gameSession: game_a_game_session_33334444_address,
-    //     })
-    //     .signers([game_a])
-    //     .rpc();
+      await program.methods
+        .deposit()
+        .accountsPartial({
+          player: player_c.publicKey,
+          game: game_a.publicKey,
+          mint: created_mint_a_account.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          gameSession: game_a_game_session_33334444_address,
+        })
+        .signers([player_c])
+        .rpc();
 
-    //   let session_vault = getAssociatedTokenAddressSync(
-    //     created_mint_a_account.address,
-    //     game_a_game_session_33334444_address,
-    //     true,
-    //     TOKEN_PROGRAM_ID
-    //   );
+      await program.methods
+        .deposit()
+        .accountsPartial({
+          player: player_d.publicKey,
+          game: game_a.publicKey,
+          mint: created_mint_a_account.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          gameSession: game_a_game_session_33334444_address,
+        })
+        .signers([player_d])
+        .rpc();
+    });
+    it("should throw if not all eligible players recieved winnings", async () => {
+      await program.methods
+        .payout()
+        .accountsPartial({
+          player: player_a.publicKey,
+          game: game_a.publicKey,
+          mint: created_mint_a_account.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          gameSession: game_a_game_session_33334444_address,
+        })
+        .signers([game_a])
+        .rpc();
 
-    //   let session_vault_account_balance_before_tx = (
-    //     await connection.getTokenAccountBalance(session_vault)
-    //   ).value.amount;
+      let session_vault = getAssociatedTokenAddressSync(
+        created_mint_a_account.address,
+        game_a_game_session_33334444_address,
+        true,
+        TOKEN_PROGRAM_ID
+      );
 
-    //   try {
-    //     await program.methods
-    //       .close()
-    //       .accountsPartial({
-    //         game: game_a.publicKey,
-    //         mint: created_mint_a_account.address,
-    //         tokenProgram: TOKEN_PROGRAM_ID,
-    //         gameSession: game_a_game_session_33334444_address,
-    //       })
-    //       .signers([game_a])
-    //       .rpc();
-    //   } catch (error) {
-    //     expect(error.message).to.contain("Cannot close, players not paid out");
-    //   }
+      let session_vault_account_balance_before_tx = (
+        await connection.getTokenAccountBalance(session_vault)
+      ).value.amount;
 
-    //   let session_vault_account_balance_after_tx = (
-    //     await connection.getTokenAccountBalance(session_vault)
-    //   ).value.amount;
+      try {
+        await program.methods
+          .close()
+          .accountsPartial({
+            game: game_a.publicKey,
+            mint: created_mint_a_account.address,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            gameSession: game_a_game_session_33334444_address,
+          })
+          .signers([game_a])
+          .rpc();
+      } catch (error) {
+        expect(error.message).to.contain("Cannot close, players not paid out");
+      }
 
-    //   assert.strictEqual(
-    //     session_vault_account_balance_after_tx,
-    //     session_vault_account_balance_before_tx
-    //   );
-    // });
-    // it("should close the game session if all eligible players recieved winnings", async () => {
-    //   await program.methods
-    //     .payout()
-    //     .accountsPartial({
-    //       player: player_c.publicKey,
-    //       game: game_a.publicKey,
-    //       mint: created_mint_a_account.address,
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //       gameSession: game_a_game_session_33334444_address,
-    //     })
-    //     .signers([game_a])
-    //     .rpc();
+      let session_vault_account_balance_after_tx = (
+        await connection.getTokenAccountBalance(session_vault)
+      ).value.amount;
 
-    //   const game_ata = getAssociatedTokenAddressSync(
-    //     created_mint_a_account.address,
-    //     game_a.publicKey,
-    //     true,
-    //     TOKEN_PROGRAM_ID
-    //   );
+      assert.strictEqual(
+        session_vault_account_balance_after_tx,
+        session_vault_account_balance_before_tx
+      );
+    });
+    it("should close the game session if all eligible players recieved winnings", async () => {
+      await program.methods
+        .payout()
+        .accountsPartial({
+          player: player_c.publicKey,
+          game: game_a.publicKey,
+          mint: created_mint_a_account.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          gameSession: game_a_game_session_33334444_address,
+        })
+        .signers([game_a])
+        .rpc();
 
-    //   const game_ata_balance_before_tx = (
-    //     await connection.getTokenAccountBalance(game_ata)
-    //   ).value.amount;
+      const game_ata = getAssociatedTokenAddressSync(
+        created_mint_a_account.address,
+        game_a.publicKey,
+        true,
+        TOKEN_PROGRAM_ID
+      );
 
-    //   const game_session = await getGameSessionData(
-    //     program,
-    //     game_a,
-    //     GAME_SESSION_SEED,
-    //     SEED_2
-    //   );
+      const admin_ata = getAssociatedTokenAddressSync(
+        created_mint_a_account.address,
+        admin.publicKey,
+        true,
+        TOKEN_PROGRAM_ID
+      );
 
-    //   let session_vault = getAssociatedTokenAddressSync(
-    //     created_mint_a_account.address,
-    //     game_a_game_session_33334444_address,
-    //     true,
-    //     TOKEN_PROGRAM_ID
-    //   );
+      const game_ata_balance_before_tx = (
+        await connection.getTokenAccountBalance(game_ata)
+      ).value.amount;
 
-    //   let session_vault_account_balance_before_tx = (
-    //     await connection.getTokenAccountBalance(session_vault)
-    //   ).value.amount;
+      const protocol_ata_balance_before_tx = (
+        await connection.getTokenAccountBalance(admin_ata)
+      ).value.amount;
 
-    //   let a = getAssociatedTokenAddressSync(
-    //     created_mint_a_account.address,
-    //     player_a.publicKey,
-    //     true,
-    //     TOKEN_PROGRAM_ID
-    //   );
+      const game_session = await getGameSessionData(
+        program,
+        game_a,
+        GAME_SESSION_SEED,
+        SEED_2
+      );
 
-    //   let a_b = (await connection.getTokenAccountBalance(a)).value.amount;
+      await program.methods
+        .close()
+        .accountsPartial({
+          game: game_a.publicKey,
+          mint: created_mint_a_account.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          gameSession: game_a_game_session_33334444_address,
+        })
+        .signers([game_a])
+        .rpc();
 
-    //   let c = getAssociatedTokenAddressSync(
-    //     created_mint_a_account.address,
-    //     player_c.publicKey,
-    //     true,
-    //     TOKEN_PROGRAM_ID
-    //   );
+      const game_ata_balance_after_tx = (
+        await connection.getTokenAccountBalance(game_ata)
+      ).value.amount;
 
-    //   let c_b = (await connection.getTokenAccountBalance(a)).value.amount;
+      const protocol_ata_balance_after_tx = (
+        await connection.getTokenAccountBalance(admin_ata)
+      ).value.amount;
 
-    //   console.log(session_vault_account_balance_before_tx, a_b, c_b);
+      assert.strictEqual(
+        game_ata_balance_after_tx,
+        (
+          parseInt(game_ata_balance_before_tx) +
+          game_session.terminationFee.toNumber()
+        ).toString()
+      );
 
-    //   await program.methods
-    //     .close()
-    //     .accountsPartial({
-    //       game: game_a.publicKey,
-    //       mint: created_mint_a_account.address,
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //       gameSession: game_a_game_session_33334444_address,
-    //     })
-    //     .signers([game_a])
-    //     .rpc();
-
-    //   const game_ata_balance_after_tx = (
-    //     await connection.getTokenAccountBalance(game_ata)
-    //   ).value.amount;
-
-    //   assert.strictEqual(
-    //     game_ata_balance_after_tx,
-    //     (
-    //       parseInt(game_ata_balance_before_tx) +
-    //       game_session.terminationFee.toNumber()
-    //     ).toString()
-    //   );
-    // });
+      assert.strictEqual(
+        protocol_ata_balance_after_tx,
+        (
+          parseInt(protocol_ata_balance_before_tx) +
+          game_session.terminationFee.toNumber()
+        ).toString()
+      );
+    });
   });
 });

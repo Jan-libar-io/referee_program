@@ -90,18 +90,13 @@ impl<'info> Transfer<'info> {
                         TransferError::PlayerNotEligibleForPayout
                     );
 
-                    let fee_amount = self.game_session.termination_fee
-                        .checked_mul(2)
-                        .ok_or(ProgramError::ArithmeticOverflow)?;
-
-                    let amount_minus_fee = self.vault.amount
-                        .checked_sub(fee_amount)
-                        .ok_or(ProgramError::ArithmeticOverflow)?;
-
-                    let winnings = amount_minus_fee
+                    let winnings = self.game_session.session_entry_cost_per_team
+                        .checked_mul(self.game_session.amount_of_teams as u64)
+                        .ok_or(ProgramError::ArithmeticOverflow)?
+                        .checked_sub(self.game_session.termination_fee)
+                        .ok_or(ProgramError::ArithmeticOverflow)?
                         .checked_div(self.game_session.players_per_team as u64)
                         .ok_or(ProgramError::ArithmeticOverflow)?;
-
 
                     self.transfer( winnings)?;
 
