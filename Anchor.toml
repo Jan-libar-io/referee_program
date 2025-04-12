@@ -7,11 +7,15 @@ skip-lint = false
 [programs.localnet]
 referee_program = "6f4JGkiVCkyLm7gReznbihsRaFv1bTwSaiftGLB4UFVm"
 
+[programs.devnet]
+referee_program = "6f4JGkiVCkyLm7gReznbihsRaFv1bTwSaiftGLB4UFVm"
+
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
